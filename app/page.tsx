@@ -10,6 +10,7 @@ interface StudentRecord {
   assignment: number; 
   attendance: number; 
   major_exam: number;
+  final_grade?: number; // Added for Student 5 migration compatibility
 }
 
 export default function Home() {
@@ -27,7 +28,8 @@ export default function Home() {
   const [records, setRecords] = useState<StudentRecord[]>([]);
 
   const fetchRecords = useCallback(async () => {
-    const { data } = await supabase.from('student4_grades').select('*').order('created_at', { ascending: false });
+    // UPDATED: Pointing to student5_grades
+    const { data } = await supabase.from('student5_grades').select('*').order('created_at', { ascending: false });
     setRecords((data as StudentRecord[]) || []);
   }, []);
 
@@ -58,8 +60,8 @@ export default function Home() {
       major_exam: p(scores.exam) 
     };
 
-    if (editingId) await supabase.from('student4_grades').update(payload).eq('id', editingId);
-    else await supabase.from('student4_grades').insert([payload]);
+    if (editingId) await supabase.from('student5_grades').update(payload).eq('id', editingId);
+    else await supabase.from('student5_grades').insert([payload]);
 
     resetForm(); 
     fetchRecords();
@@ -67,7 +69,7 @@ export default function Home() {
 
   const deleteRecord = async (id: string) => {
     if (confirm("Permanently delete this record?")) {
-      const { error } = await supabase.from('student4_grades').delete().eq('id', id);
+      const { error } = await supabase.from('student5_grades').delete().eq('id', id);
       if (!error) fetchRecords();
     }
   };
@@ -86,54 +88,55 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-slate-900 via-blue-900 to-black p-4 md:p-12 text-slate-100 font-sans">
+    <main className="min-h-screen bg-[#0a0f18] p-4 md:p-12 text-slate-100 font-sans">
       <div className="max-w-7xl mx-auto">
         
-        <header className="flex justify-between items-center mb-12 bg-white/5 backdrop-blur-xl p-8 rounded-[2rem] border border-white/10 shadow-2xl">
+        {/* SOLID HEADER */}
+        <header className="flex justify-between items-center mb-8 bg-[#161f2e] p-8 rounded-3xl border-2 border-slate-800 shadow-2xl">
           <div>
-            <h1 className="text-2xl font-black uppercase tracking-widest text-blue-400">Academic Portal</h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 italic tracking-widest">V4.0 // Database Synchronized</p>
+            <h1 className="text-3xl font-black uppercase tracking-tighter text-white">BSIT Student Grading System</h1>
+            <p className="text-[10px] font-black text-blue-500 uppercase mt-1 tracking-[0.3em]">Status: Database Online</p>
           </div>
-          <div className="text-right">
-            <span className="text-4xl font-black text-white">{records.length}</span>
-            <p className="text-[10px] font-black text-blue-500 uppercase tracking-tighter">Units Verified</p>
+          <div className="bg-[#0a0f18] px-6 py-3 rounded-2xl border border-slate-700">
+            <span className="text-3xl font-black text-blue-400">{records.length}</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase ml-3 tracking-widest">Records</span>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* INPUT SECTION */}
-          <div className="lg:col-span-4 bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 h-fit sticky top-12">
-            <h3 className="text-xs font-black text-blue-400 uppercase mb-8 flex items-center gap-2">
-              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span> {editingId ? 'Modify Record' : 'Create New Entry'}
+          {/* INPUT SECTION - SOLID BACKGROUND */}
+          <div className="lg:col-span-4 bg-[#161f2e] rounded-3xl p-8 border-2 border-slate-800 h-fit sticky top-8 shadow-2xl">
+            <h3 className="text-xs font-black text-white uppercase mb-8 pb-4 border-b border-slate-700">
+              {editingId ? 'Edit Student Mode' : 'New Registration'}
             </h3>
             
             <div className="space-y-6">
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Student Name</label>
                 <input 
-                  className="w-full bg-slate-950 border border-white/10 rounded-2xl p-4 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all placeholder:text-slate-700"
-                  placeholder="Enter Full Name..." 
+                  className="w-full bg-[#0a0f18] border-2 border-slate-700 rounded-xl p-4 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all"
+                  placeholder="Enter Name..." 
                   value={name} 
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
               
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-slate-500 uppercase block">Score Input Matrix</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase block">Grade Distribution</label>
                 {Object.keys(scores).map((k) => (
-                  <div key={k} className="flex items-center gap-3 bg-slate-900 p-4 rounded-2xl border border-white/5 hover:border-blue-500/40 transition-all">
-                    <span className="text-[10px] font-black w-16 text-blue-400 uppercase">{k === 'assign' ? 'Assgn' : k === 'atten' ? 'Atten' : k}</span>
+                  <div key={k} className="flex items-center gap-3 bg-[#0f172a] p-3 rounded-xl border border-slate-800">
+                    <span className="text-[9px] font-black w-14 text-slate-400 uppercase">{k === 'assign' ? 'Asgn' : k === 'atten' ? 'Attn' : k}</span>
                     <input 
                       type="number" 
-                      className="w-full bg-transparent text-right font-black text-white text-lg outline-none placeholder:text-slate-800" 
-                      placeholder="--" 
+                      className="w-full bg-transparent text-right font-black text-blue-400 text-lg outline-none" 
+                      placeholder="0" 
                       value={scores[k].score}
                       onChange={(e) => setScores({...scores, [k]: {...scores[k], score: e.target.value}})} 
                     />
                     <span className="text-slate-700 font-bold">/</span>
                     <input 
                       type="number" 
-                      className="w-14 bg-slate-800 p-1 rounded-md text-center font-bold text-slate-400 outline-none focus:text-white" 
+                      className="w-12 bg-slate-800 p-1 rounded text-center text-xs font-bold text-slate-300 outline-none" 
                       value={scores[k].total}
                       onChange={(e) => setScores({...scores, [k]: {...scores[k], total: e.target.value}})} 
                     />
@@ -141,72 +144,65 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="flex flex-col gap-3 pt-4">
-                <button onClick={addStudent} className="w-full bg-blue-600 hover:bg-blue-400 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-900/40 transition-all uppercase text-xs tracking-widest">
-                  {editingId ? 'Update Terminal' : 'Commit to Database'}
+              <div className="pt-4">
+                <button onClick={addStudent} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl transition-all uppercase text-xs tracking-widest">
+                  {editingId ? 'Update Record' : 'Add Student and Grades'}
                 </button>
                 {editingId && (
-                  <button onClick={resetForm} className="text-[10px] font-black text-slate-500 hover:text-white uppercase transition-colors">Discard Changes</button>
+                  <button onClick={resetForm} className="w-full mt-4 text-[10px] font-black text-slate-500 hover:text-red-400 uppercase">Discard Changes</button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* TABLE SECTION */}
-          <div className="lg:col-span-8 bg-white/5 backdrop-blur-md rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl">
+          {/* TABLE SECTION - SOLID BACKGROUND */}
+          <div className="lg:col-span-8 bg-[#161f2e] rounded-3xl border-2 border-slate-800 overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left min-w-[850px]">
-                <thead className="bg-white/5 border-b border-white/5">
-                  <tr className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                    <th className="px-8 py-7">Student Information</th>
-                    <th className="px-6 py-7 text-center">Score Matrix</th>
-                    <th className="px-6 py-7 text-center">Average Grade</th>
-                    <th className="px-8 py-7 text-right">Action</th>
+                <thead className="bg-[#1e293b] border-b-2 border-slate-800">
+                  <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <th className="px-8 py-6">Student Information</th>
+                    <th className="px-6 py-6 text-center">Score Matrix</th>
+                    <th className="px-6 py-6 text-center">Final Grade</th>
+                    <th className="px-8 py-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-slate-300">
-                  {records.map((r) => {
-                    const avg = (Number(r.quiz||0) * 0.20) + 
-                                (Number(r.laboratory||0) * 0.30) + 
-                                (Number(r.assignment||0) * 0.10) + 
-                                (Number(r.attendance||0) * 0.10) + 
-                                (Number(r.major_exam||0) * 0.30);
-                    return (
-                      <tr key={r.id} className="hover:bg-white/5 transition-all group">
-                        <td className="px-8 py-8">
-                          <p className="font-black text-white text-base uppercase tracking-tight">{r.student_name}</p>
-                          <p className="text-[9px] text-blue-500 font-bold mt-1 tracking-widest uppercase">Validated Entry</p>
-                        </td>
-                        <td className="px-6 py-8 text-center">
-                          <div className="grid grid-cols-5 gap-1.5 max-w-[420px] mx-auto">
-                            {(['quiz', 'laboratory', 'assignment', 'attendance', 'major_exam'] as const).map(k => (
-                              <div key={k} className="bg-slate-950/60 px-2 py-2 rounded-xl text-[9px] font-black border border-white/5 uppercase">
-                                <p className="text-slate-600 mb-1">{k.substring(0,3)}</p>
-                                <span className="text-blue-400 text-xs">{Number(r[k] || 0).toFixed(0)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-8 text-center">
-                          <div className="inline-block bg-blue-500/10 px-6 py-3 rounded-2xl border border-blue-500/20">
-                            <span className="text-2xl font-black text-blue-400">
-                              {avg.toFixed(1)}<span className="text-xs ml-0.5">%</span>
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-8 text-right">
-                          <div className="flex justify-end gap-3">
-                            <button onClick={() => handleEdit(r)} className="p-3 bg-white/5 rounded-xl hover:bg-blue-600 hover:text-white transition-all text-slate-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                            </button>
-                            <button onClick={() => deleteRecord(r.id)} className="p-3 bg-white/5 rounded-xl hover:bg-red-600 hover:text-white transition-all text-slate-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                <tbody className="divide-y divide-slate-800 text-slate-300">
+                  {records.map((r) => (
+                    <tr key={r.id} className="hover:bg-[#1e293b]/50 transition-all">
+                      <td className="px-8 py-6">
+                        <p className="font-black text-white text-base uppercase">{r.student_name}</p>
+                        <span className="text-[8px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded font-black mt-1 inline-block uppercase tracking-tighter">Verified BSIT Record</span>
+                      </td>
+                      <td className="px-6 py-6">
+                        <div className="flex justify-center gap-1">
+                          {(['quiz', 'laboratory', 'assignment', 'attendance', 'major_exam'] as const).map(k => (
+                            <div key={k} className="bg-[#0a0f18] w-12 py-2 rounded-lg text-center border border-slate-800">
+                              <p className="text-[7px] text-slate-500 uppercase">{k.substring(0,3)}</p>
+                              <p className="text-blue-400 text-[10px] font-black">{Number(r[k] || 0).toFixed(0)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 text-center">
+                        <div className="inline-block bg-[#0a0f18] px-4 py-2 rounded-xl border-2 border-blue-900/50">
+                          <span className="text-xl font-black text-blue-400">
+                            {Number(r.final_grade || 0).toFixed(1)}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => handleEdit(r)} className="p-3 bg-slate-800 rounded-xl hover:bg-blue-600 text-white transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                          </button>
+                          <button onClick={() => deleteRecord(r.id)} className="p-3 bg-slate-800 rounded-xl hover:bg-red-600 text-white transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
