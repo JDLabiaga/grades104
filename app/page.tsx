@@ -117,8 +117,8 @@ export default function Home() {
               <div>
                 <label className="text-xs font-black text-slate-600 uppercase mb-2 block">Full Student Name</label>
                 <input 
-                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-4 text-base font-black text-slate-900 focus:border-blue-600 outline-none transition-all placeholder:text-slate-300"
-                  placeholder="e.g. JOHN DOE" 
+                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-4 text-base font-black text-slate-900 focus:border-blue-600 outline-none transition-all"
+                  placeholder="" // Placeholder is now completely empty
                   value={name} 
                   onChange={(e) => setName(e.target.value)}
                 />
